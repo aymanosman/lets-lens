@@ -44,15 +44,16 @@ module Lets.StoreLens (
 , modifyCityUppercase
 ) where
 
-import Control.Applicative(Applicative((<*>)))
-import Data.Char(toUpper)
-import Data.Functor((<$>))
-import Data.Map(Map)
-import qualified Data.Map as Map(insert, delete, lookup)
-import Data.Set(Set)
-import qualified Data.Set as Set(insert, delete, member)
-import Lets.Data(Store(Store), Person(Person), Locality(Locality), Address(Address), bool)
-import Prelude hiding (product)
+import           Control.Applicative (Applicative ((<*>)))
+import           Data.Char           (toUpper)
+import           Data.Functor        ((<$>))
+import           Data.Map            (Map)
+import qualified Data.Map            as Map (delete, insert, lookup)
+import           Data.Set            (Set)
+import qualified Data.Set            as Set (delete, insert, member)
+import           Lets.Data           (Address (Address), Locality (Locality),
+                                      Person (Person), Store (Store), bool)
+import           Prelude             hiding (product)
 
 -- $setup
 -- >>> import qualified Data.Map as Map(fromList)
@@ -112,10 +113,6 @@ data Lens a b =
 --
 -- >>> get sndL ("abc", 0 :: Int)
 -- 0
---
--- prop> let types = (x :: Int, y :: String) in get fstL (x, y) == x
---
--- prop> let types = (x :: Int, y :: String) in get sndL (x, y) == y
 get ::
   Lens a b
   -> a
@@ -130,13 +127,9 @@ get (Lens r) =
 --
 -- >>> set sndL ("abc", 0 :: Int) 1
 -- ("abc",1)
---
--- prop> let types = (x :: Int, y :: String) in set fstL (x, y) z == (z, y)
---
--- prop> let types = (x :: Int, y :: String) in set sndL (x, y) z == (x, z)
 set ::
   Lens a b
-  -> a 
+  -> a
   -> b
   -> a
 set (Lens r) =
@@ -150,7 +143,7 @@ getsetLaw ::
   -> Bool
 getsetLaw l =
   \a -> set l a (get l a) == a
-  
+
 -- | The set/get law of lenses. This function should always return @True@.
 setgetLaw ::
   Eq b =>
@@ -181,10 +174,6 @@ setsetLaw l a b1 b2 =
 --
 -- >>> modify sndL (+1) ("abc", 0 :: Int)
 -- ("abc",1)
---
--- prop> let types = (x :: Int, y :: String) in modify fstL id (x, y) == (x, y)
---
--- prop> let types = (x :: Int, y :: String) in modify sndL id (x, y) == (x, y)
 modify ::
   Lens a b
   -> (b -> b)
@@ -211,10 +200,6 @@ infixr 4 %~
 --
 -- >>> sndL .~ 1 $ ("abc", 0 :: Int)
 -- ("abc",1)
---
--- prop> let types = (x :: Int, y :: String) in set fstL (x, y) z == (fstL .~ z $ (x, y))
---
--- prop> let types = (x :: Int, y :: String) in set sndL (x, y) z == (sndL .~ z $ (x, y))
 (.~) ::
   Lens a b
   -> b
@@ -243,7 +228,7 @@ fmodify ::
   -> f a
 fmodify =
   error "todo: fmodify"
-  
+
 -- |
 --
 -- >>> fstL |= Just 3 $ (7, "abc")
@@ -266,12 +251,6 @@ infixl 5 |=
 --
 -- >>> modify fstL (*10) (3, "abc")
 -- (30,"abc")
---
--- prop> let types = (x :: Int, y :: String) in getsetLaw fstL (x, y)
---
--- prop> let types = (x :: Int, y :: String) in setgetLaw fstL (x, y) z
---
--- prop> let types = (x :: Int, y :: String) in setsetLaw fstL (x, y) z
 fstL ::
   Lens (x, y) x
 fstL =
@@ -281,12 +260,6 @@ fstL =
 --
 -- >>> modify sndL (++ "def") (13, "abc")
 -- (13,"abcdef")
---
--- prop> let types = (x :: Int, y :: String) in getsetLaw sndL (x, y)
---
--- prop> let types = (x :: Int, y :: String) in setgetLaw sndL (x, y) z
---
--- prop> let types = (x :: Int, y :: String) in setsetLaw sndL (x, y) z
 sndL ::
   Lens (x, y) y
 sndL =
@@ -379,7 +352,7 @@ identity ::
   Lens a a
 identity =
   error "todo: identity"
-    
+
 -- |
 --
 -- >>> get (product fstL sndL) (("abc", 3), (4, "def"))
@@ -550,7 +523,7 @@ setCityAndLocality ::
   (Person, Address) -> (String, Locality) -> (Person, Address)
 setCityAndLocality =
   error "todo: setCityAndLocality"
-  
+
 -- |
 --
 -- >>> getSuburbOrCity (Left maryAddress)
