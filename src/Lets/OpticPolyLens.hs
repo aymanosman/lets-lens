@@ -42,13 +42,18 @@ module Lets.OpticPolyLens (
 , modifyIntandLengthEven
 ) where
 
-import Data.Char(toUpper)
-import Data.Map(Map)
-import qualified Data.Map as Map(insert, delete, lookup)
-import Data.Set(Set)
-import qualified Data.Set as Set(insert, delete, member)
-import Lets.Data(AlongsideLeft(AlongsideLeft, getAlongsideLeft), AlongsideRight(AlongsideRight, getAlongsideRight), Identity(Identity, getIdentity), Const(Const, getConst), IntAnd(IntAnd), Person(Person), Locality(Locality), Address(Address), bool)
-import Prelude hiding (product)
+import           Data.Char (toUpper)
+import           Data.Map  (Map)
+import qualified Data.Map  as Map (delete, insert, lookup)
+import           Data.Set  (Set)
+import qualified Data.Set  as Set (delete, insert, member)
+import           Lets.Data (Address (Address),
+                            AlongsideLeft (AlongsideLeft, getAlongsideLeft),
+                            AlongsideRight (AlongsideRight, getAlongsideRight),
+                            Const (Const, getConst),
+                            Identity (Identity, getIdentity), IntAnd (IntAnd),
+                            Locality (Locality), Person (Person), bool)
+import           Prelude   hiding (product)
 
 -- $setup
 -- >>> import qualified Data.Map as Map(fromList)
@@ -101,7 +106,7 @@ setsetLaw ::
   -> s
   -> b
   -> b
-  -> Bool 
+  -> Bool
 setsetLaw l a b1 b2 =
   set l (set l a b1) b2 == set l a b2
 
@@ -114,10 +119,6 @@ setsetLaw l a b1 b2 =
 --
 -- >>> modify sndL (+1) ("abc", 0 :: Int)
 -- ("abc",1)
---
--- prop> let types = (x :: Int, y :: String) in modify fstL id (x, y) == (x, y)
---
--- prop> let types = (x :: Int, y :: String) in modify sndL id (x, y) == (x, y)
 modify ::
   Lens s t a b
   -> (a -> b)
@@ -144,10 +145,6 @@ infixr 4 %~
 --
 -- >>> sndL .~ 1 $ ("abc", 0 :: Int)
 -- ("abc",1)
---
--- prop> let types = (x :: Int, y :: String) in set fstL (x, y) z == (fstL .~ z $ (x, y))
---
--- prop> let types = (x :: Int, y :: String) in set sndL (x, y) z == (sndL .~ z $ (x, y))
 (.~) ::
   Lens s t a b
   -> b
@@ -173,7 +170,7 @@ fmodify ::
   Lens s t a b
   -> (a -> f b)
   -> s
-  -> f t 
+  -> f t
 fmodify =
   error "todo: fmodify"
 
@@ -199,12 +196,6 @@ infixl 5 |=
 --
 -- >>> modify fstL (*10) (3, "abc")
 -- (30,"abc")
---
--- prop> let types = (x :: Int, y :: String) in getsetLaw fstL (x, y)
---
--- prop> let types = (x :: Int, y :: String) in setgetLaw fstL (x, y) z
---
--- prop> let types = (x :: Int, y :: String) in setsetLaw fstL (x, y) z
 fstL ::
   Lens (a, x) (b, x) a b
 fstL =
@@ -214,12 +205,6 @@ fstL =
 --
 -- >>> modify sndL (++ "def") (13, "abc")
 -- (13,"abcdef")
---
--- prop> let types = (x :: Int, y :: String) in getsetLaw sndL (x, y)
---
--- prop> let types = (x :: Int, y :: String) in setgetLaw sndL (x, y) z
---
--- prop> let types = (x :: Int, y :: String) in setsetLaw sndL (x, y) z
 sndL ::
   Lens (x, a) (x, b) a b
 sndL =
@@ -491,7 +476,7 @@ setCityAndLocality ::
   (Person, Address) -> (String, Locality) -> (Person, Address)
 setCityAndLocality =
   error "todo: setCityAndLocality"
-  
+
 -- |
 --
 -- >>> getSuburbOrCity (Left maryAddress)
