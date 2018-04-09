@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Lets.OpticPolyLens (
@@ -42,18 +43,21 @@ module Lets.OpticPolyLens (
 , modifyIntandLengthEven
 ) where
 
-import           Data.Char (toUpper)
-import           Data.Map  (Map)
-import qualified Data.Map  as Map (delete, insert, lookup)
-import           Data.Set  (Set)
-import qualified Data.Set  as Set (delete, insert, member)
-import           Lets.Data (Address (Address),
-                            AlongsideLeft (AlongsideLeft, getAlongsideLeft),
-                            AlongsideRight (AlongsideRight, getAlongsideRight),
-                            Const (Const, getConst),
-                            Identity (Identity, getIdentity), IntAnd (IntAnd),
-                            Locality (Locality), Person (Person), bool)
-import           Prelude   hiding (product)
+import           Data.Char      (toUpper)
+import           Data.Map       (Map)
+import qualified Data.Map       as Map (delete, insert, lookup)
+import           Data.Set       (Set)
+import qualified Data.Set       as Set (delete, insert, member)
+import           Lets.Data      (Address (Address),
+                                 AlongsideLeft (AlongsideLeft, getAlongsideLeft),
+                                 AlongsideRight (AlongsideRight, getAlongsideRight),
+                                 Const (Const, getConst),
+                                 Identity (Identity, getIdentity),
+                                 IntAnd (IntAnd), Locality (Locality),
+                                 Person (Person), bool)
+import           Prelude        hiding (product)
+
+import           Data.Bifunctor (bimap)
 
 -- $setup
 -- >>> import qualified Data.Map as Map(fromList)
@@ -124,8 +128,8 @@ modify ::
   -> (a -> b)
   -> s
   -> t
-modify =
-  error "todo: modify"
+modify l f a =
+  set l a (f (get l a))
 
 -- | An alias for @modify@.
 (%~) ::
@@ -150,8 +154,8 @@ infixr 4 %~
   -> b
   -> s
   -> t
-(.~) =
-  error "todo: (.~)"
+(.~) l b a =
+  set l a b
 
 infixl 5 .~
 
@@ -171,8 +175,8 @@ fmodify ::
   -> (a -> f b)
   -> s
   -> f t
-fmodify =
-  error "todo: fmodify"
+fmodify l f a =
+  set l a <$> f (get l a)
 
 -- |
 --
@@ -187,8 +191,8 @@ fmodify =
   -> f b
   -> s
   -> f t
-(|=) =
-  error "todo: (|=)"
+(|=) l f a =
+  set l a <$> f
 
 infixl 5 |=
 
@@ -199,7 +203,8 @@ infixl 5 |=
 fstL ::
   Lens (a, x) (b, x) a b
 fstL =
-  error "todo: fstL"
+  Lens (\f (a, b) -> (\a' -> (a', b))
+                     <$> (f a))
 
 -- |
 --
@@ -208,7 +213,8 @@ fstL =
 sndL ::
   Lens (x, a) (x, b) a b
 sndL =
-  error "todo: sndL"
+  Lens (\f (a, b) -> (\b' -> (a, b'))
+                     <$> (f b))
 
 -- |
 --
@@ -233,8 +239,9 @@ mapL ::
   Ord k =>
   k
   -> Lens (Map k v) (Map k v) (Maybe v) (Maybe v)
-mapL =
-  error "todo: mapL"
+mapL k =
+  Lens (\f m -> (\mv -> maybe (Map.delete k) (Map.insert k) mv m)
+                <$> f (Map.lookup k m))
 
 -- |
 --
@@ -259,8 +266,9 @@ setL ::
   Ord k =>
   k
   -> Lens (Set k) (Set k) Bool Bool
-setL =
-  error "todo: setL"
+setL k =
+  Lens (\f s -> (\b -> if b then (Set.insert k s) else (Set.delete k s))
+                <$> f (Set.member k s))
 
 -- |
 --
@@ -273,8 +281,9 @@ compose ::
   Lens s t a b
   -> Lens q r s t
   -> Lens q r a b
-compose =
-  error "todo: compose"
+compose l l' =
+  Lens (\f a -> (\c -> set l' a (set l (get l' a) c))
+                <$> f (get l (get l' a)))
 
 -- | An alias for @compose@.
 (|.) ::
@@ -296,7 +305,7 @@ infixr 9 |.
 identity ::
   Lens a b a b
 identity =
-  error "todo: identity"
+  Lens (fmap id)
 
 -- |
 --
@@ -309,8 +318,9 @@ product ::
   Lens s t a b
   -> Lens q r c d
   -> Lens (s, q) (t, r) (a, c) (b, d)
-product =
-  error "todo: product"
+product l l' =
+  Lens (\f s@(a, c) -> (bimap (set l a) (set l' c))
+                       <$> f (bimap (get l) (get l') s))
 
 -- | An alias for @product@.
 (***) ::
@@ -339,8 +349,9 @@ choice ::
   Lens s t a b
   -> Lens q r a b
   -> Lens (Either s q) (Either t r) a b
-choice =
-  error "todo: choice"
+choice l l' =
+  Lens (\f s -> (\x -> (bimap (\a -> set l a x) (\b -> set l' b x) s))
+                <$> f (either (get l) (get l') s))
 
 -- | An alias for @choice@.
 (|||) ::
@@ -435,7 +446,7 @@ getSuburb ::
   Person
   -> String
 getSuburb =
-  error "todo: getSuburb"
+  get (suburbL |. addressL)
 
 
 -- |
@@ -450,7 +461,7 @@ setStreet ::
   -> String
   -> Person
 setStreet =
-  error "todo: setStreet"
+  set (streetL |. addressL)
 
 -- |
 --
@@ -463,7 +474,7 @@ getAgeAndCountry ::
   (Person, Locality)
   -> (Int, String)
 getAgeAndCountry =
-  error "todo: getAgeAndCountry"
+  get (product ageL countryL)
 
 -- |
 --
@@ -474,8 +485,10 @@ getAgeAndCountry =
 -- (Person 28 "Mary" (Address "83 Mary Ln" "Maryland" (Locality "Some Other City" "Western Mary" "Maristan")),Address "15 Fred St" "Fredville" (Locality "Mary Mary" "Western Mary" "Maristan"))
 setCityAndLocality ::
   (Person, Address) -> (String, Locality) -> (Person, Address)
-setCityAndLocality =
-  error "todo: setCityAndLocality"
+setCityAndLocality (person, address) (city, locality) =
+    ( set (cityL |. localityL |. addressL) person city
+    , set localityL address locality
+    )
 
 -- |
 --
